@@ -1,0 +1,90 @@
+name: CI Checks
+
+on:
+  push:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  building:
+    name: Building
+    continue-on-error: ${{ matrix.experimental || false }}
+    strategy:
+      matrix:
+        # All generated code should be running on stable now
+        rust:
+          - stable
+          - nightly
+        include:
+          # Nightly is only for reference and allowed to fail
+          - rust: nightly
+            experimental: true
+        os:
+          # Check compilation works on common OSes
+          # (i.e. no path issues)
+          - ubuntu-latest
+          # - macOS-latest
+          # - windows-latest
+          - self-hosted
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+
+      - run: cargo build --all
+
+      - run: cargo build --all --release
+
+  testing:
+    name: Testing
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          # - macOS-latest
+          - self-hosted
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - run: cargo test
+
+  linting:
+    name: Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: clippy
+
+      - run: cargo clippy --all-targets
+
+  formatting:
+    name: Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt
+
+      - run: cargo fmt -- --check
