@@ -1,0 +1,7 @@
+[package]
+name = "ics"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ics_derive = { path = "../ics_derive/" }
