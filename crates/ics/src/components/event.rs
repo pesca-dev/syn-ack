@@ -1,6 +1,6 @@
 use ics_derive::Ics;
 
-use crate::{Class, DTStamp, Uid};
+use crate::{Class, DTStamp, Geo, Uid};
 
 /// Struct for representing an event entry in a calendar.
 #[derive(Default, Debug, Clone, PartialEq, Eq, Ics)]
@@ -9,8 +9,10 @@ pub struct Eventc {
     // required
     pub dtstamp: DTStamp,
 
+    /// This property defines the persistent, globally unique identifier for the calendar component.
     uid: Uid,
 
+    // This property specifies when the calendar component begins.
     // required if calendar has no method
     // this can also be a date instead of datetime
     pub dtstart: DTStamp,
@@ -20,23 +22,38 @@ pub struct Eventc {
 
     /// Information about the creation time of this event.
     pub created: Option<u64>,
+
+    /// This property provides a more complete description of the calendar component than that provided by the "SUMMARY" property.
     pub description: Option<String>,
-    #[skip]
-    pub geo: Option<()>,
+
+    /// This property specifies information related to the global position for the activity specified by a calendar component.
+    pub geo: Option<Geo>,
+
     #[skip]
     pub last_mod: Option<()>,
-    #[skip]
-    pub location: Option<()>,
+
+    /// This property defines the intended venue for the activity defined by a calendar component.
+    pub location: Option<String>,
+
+    /// This property defines the organizer for a calendar component.
     #[skip]
     pub organizer: Option<()>,
-    #[skip]
-    pub priority: Option<()>,
-    #[skip]
-    pub seq: Option<()>,
+
+    /// This property defines the relative priority for a calendar component.
+    pub priority: Option<u8>,
+
+    /// This property defines the revision sequence number of the calendar component within a sequence of revisions.
+    #[key = "SEQUENCE"]
+    pub seq: Option<u64>,
+
+    /// This property defines the overall status or confirmation for the calendar component.
     #[skip]
     pub status: Option<()>,
-    #[skip]
-    pub summary: Option<()>,
+
+    /// This property defines a short summary or subject for the calendar component.
+    pub summary: Option<String>,
+
+    /// This property defines whether or not an event is transparent to busy time searches.
     #[skip]
     pub transp: Option<()>,
     #[skip]
@@ -89,6 +106,16 @@ impl Eventc {
 
     pub fn with_start(mut self, date: chrono::DateTime<chrono::Utc>) -> Self {
         self.dtstart.date = Some(date);
+        self
+    }
+
+    pub fn with_geo(mut self, geo: Geo) -> Self {
+        self.geo = Some(geo);
+        self
+    }
+
+    pub fn with_location(mut self, location: impl ToString) -> Self {
+        self.location = Some(location.to_string());
         self
     }
 }
