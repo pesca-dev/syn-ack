@@ -1,15 +1,13 @@
 pub use chrono;
 
+mod component_properties;
+
 mod calendar;
-mod calendar_props;
-mod class;
+mod calprops;
 mod components;
-mod dtstamp;
-mod event;
+
+pub use self::component_properties::*;
 
 pub use self::calendar::*;
-pub use self::calendar_props::*;
-pub use self::class::*;
+pub use self::calprops::*;
 pub use self::components::*;
-pub use self::dtstamp::*;
-pub use self::event::*;

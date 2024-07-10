@@ -1,6 +1,8 @@
-use ics_derive::Ics;
+mod event;
 
-use crate::Eventc;
+pub use self::event::*;
+
+use ics_derive::Ics;
 
 #[derive(Debug, Clone, PartialEq, Eq, Ics)]
 pub enum Components {
