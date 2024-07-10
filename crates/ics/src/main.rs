@@ -1,7 +1,7 @@
 use ics::{CalProps, Eventc};
 
 fn main() {
-    let evt = Eventc::default().with_date(chrono::Utc::now());
+    let evt = Eventc::default().with_start(chrono::Utc::now());
 
     println!("{}\n\n", evt);
 

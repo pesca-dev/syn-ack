@@ -1,15 +1,19 @@
 use ics_derive::Ics;
 
-use crate::{Class, DTStamp};
+use crate::{Class, DTStamp, Uid};
+
+/// Struct for representing an event entry in a calendar.
 #[derive(Default, Debug, Clone, PartialEq, Eq, Ics)]
 #[key = "VEVENT"]
 pub struct Eventc {
     // required
     pub dtstamp: DTStamp,
-    // required
-    pub uid: (),
+
+    uid: Uid,
+
     // required if calendar has no method
-    pub dtstart: (),
+    // this can also be a date instead of datetime
+    pub dtstart: DTStamp,
 
     // optional, but only once
     pub class: Option<Class>,
@@ -78,8 +82,13 @@ pub struct Eventc {
 }
 
 impl Eventc {
-    pub fn with_date(mut self, date: chrono::DateTime<chrono::Utc>) -> Self {
+    pub fn with_dtstamp(mut self, date: chrono::DateTime<chrono::Utc>) -> Self {
         self.dtstamp.date = Some(date);
+        self
+    }
+
+    pub fn with_start(mut self, date: chrono::DateTime<chrono::Utc>) -> Self {
+        self.dtstart.date = Some(date);
         self
     }
 }
