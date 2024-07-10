@@ -1,7 +1,9 @@
 use ics::{CalProps, Eventc};
 
 fn main() {
-    let evt = Eventc::default().with_start(chrono::Utc::now());
+    let evt = Eventc::default()
+        .with_start(chrono::Utc::now())
+        .with_location("OHP 17\nRaum 16");
 
     println!("{}\n\n", evt);
 
