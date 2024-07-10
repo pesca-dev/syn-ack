@@ -1,7 +1,13 @@
-use ics::CalProps;
+use ics::{CalProps, Eventc};
 
 fn main() {
-    let props = CalProps::new();
+    let evt = Eventc::default().with_date(chrono::Utc::now());
 
-    println!("{}", props)
+    println!("{}\n\n", evt);
+
+    let mut props = CalProps::new();
+
+    props.x_prop = vec!["Foo".into(), "bar".into()];
+
+    println!("{}", props);
 }
