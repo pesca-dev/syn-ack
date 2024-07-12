@@ -1,9 +1,9 @@
-use ics_derive::Ics;
+use ics_derive::{Ics, Utils};
 
 use crate::{Class, DTStamp, Geo, Uid};
 
 /// Struct for representing an event entry in a calendar.
-#[derive(Default, Debug, Clone, PartialEq, Eq, Ics)]
+#[derive(Default, Debug, Clone, PartialEq, Eq, Ics, Utils)]
 #[key = "VEVENT"]
 pub struct Eventc {
     // required
@@ -21,7 +21,7 @@ pub struct Eventc {
     pub class: Option<Class>,
 
     /// Information about the creation time of this event.
-    pub created: Option<u64>,
+    pub created: Option<DTStamp>,
 
     /// This property provides a more complete description of the calendar component than that provided by the "SUMMARY" property.
     pub description: Option<String>,
@@ -29,8 +29,9 @@ pub struct Eventc {
     /// This property specifies information related to the global position for the activity specified by a calendar component.
     pub geo: Option<Geo>,
 
-    #[skip]
-    pub last_mod: Option<()>,
+    /// This property specifies the date and time that the information associated with the calendar component was last revised in the calendar store.
+    #[key = "LAST-MODIFIED"]
+    pub last_mod: Option<DTStamp>,
 
     /// This property defines the intended venue for the activity defined by a calendar component.
     pub location: Option<String>,
@@ -96,26 +97,4 @@ pub struct Eventc {
     pub x_prop: Vec<()>,
     #[skip]
     pub iana_prop: Vec<()>,
-}
-
-impl Eventc {
-    pub fn with_dtstamp(mut self, date: chrono::DateTime<chrono::Utc>) -> Self {
-        self.dtstamp.date = Some(date);
-        self
-    }
-
-    pub fn with_start(mut self, date: chrono::DateTime<chrono::Utc>) -> Self {
-        self.dtstart.date = Some(date);
-        self
-    }
-
-    pub fn with_geo(mut self, geo: Geo) -> Self {
-        self.geo = Some(geo);
-        self
-    }
-
-    pub fn with_location(mut self, location: impl ToString) -> Self {
-        self.location = Some(location.to_string());
-        self
-    }
 }
