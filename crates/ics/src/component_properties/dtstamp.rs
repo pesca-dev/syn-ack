@@ -12,3 +12,9 @@ impl std::fmt::Display for DTStamp {
         Ok(())
     }
 }
+
+impl From<chrono::DateTime<chrono::Utc>> for DTStamp {
+    fn from(value: chrono::DateTime<chrono::Utc>) -> Self {
+        Self { date: Some(value) }
+    }
+}
