@@ -28,7 +28,7 @@ pub fn derive_utils(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     gen.into()
 }
 
-#[proc_macro_derive(Ics, attributes(key, skip))]
+#[proc_macro_derive(Ics, attributes(key, skip, transparent))]
 pub fn derive_ics(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let DeriveInput {
         ident, data, attrs, ..

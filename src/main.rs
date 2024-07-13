@@ -1,3 +1,6 @@
+mod api;
+mod jwt;
+
 use rocket::{get, launch, routes};
 
 #[get("/")]
@@ -7,5 +10,10 @@ fn index() -> &'static str {
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build().mount("/", routes![index])
+    dotenv::dotenv().ok();
+    let mut instance = rocket::build().mount("/", routes![index]);
+
+    instance = api::mount(instance);
+
+    instance
 }
