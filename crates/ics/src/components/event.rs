@@ -1,6 +1,7 @@
 use ics_derive::{Ics, Utils};
+use url::Url;
 
-use crate::{Class, DTStamp, Geo, Uid};
+use crate::{Class, DTStamp, Geo, Status, Transparency, Uid};
 
 /// Struct for representing an event entry in a calendar.
 #[derive(Default, Debug, Clone, PartialEq, Eq, Ics, Utils)]
@@ -9,7 +10,8 @@ pub struct Eventc {
     // required
     pub dtstamp: DTStamp,
 
-    /// This property defines the persistent, globally unique identifier for the calendar component.
+    /// This property defines the persistent, globally unique identifier
+    /// for the calendar component.
     uid: Uid,
 
     // This property specifies when the calendar component begins.
@@ -23,17 +25,22 @@ pub struct Eventc {
     /// Information about the creation time of this event.
     pub created: Option<DTStamp>,
 
-    /// This property provides a more complete description of the calendar component than that provided by the "SUMMARY" property.
+    /// This property provides a more complete description of the
+    /// calendar component than that provided by the "SUMMARY" property.
     pub description: Option<String>,
 
-    /// This property specifies information related to the global position for the activity specified by a calendar component.
+    /// This property specifies information related to the global
+    /// position for the activity specified by a calendar component.
     pub geo: Option<Geo>,
 
-    /// This property specifies the date and time that the information associated with the calendar component was last revised in the calendar store.
+    /// This property specifies the date and time that the
+    /// information associated with the calendar component was last
+    /// revised in the calendar store.
     #[key = "LAST-MODIFIED"]
     pub last_mod: Option<DTStamp>,
 
-    /// This property defines the intended venue for the activity defined by a calendar component.
+    /// This property defines the intended venue for the activity
+    /// defined by a calendar component.
     pub location: Option<String>,
 
     /// This property defines the organizer for a calendar component.
@@ -43,24 +50,33 @@ pub struct Eventc {
     /// This property defines the relative priority for a calendar component.
     pub priority: Option<u8>,
 
-    /// This property defines the revision sequence number of the calendar component within a sequence of revisions.
+    /// This property defines the revision sequence number of the
+    /// calendar component within a sequence of revisions.
     #[key = "SEQUENCE"]
     pub seq: Option<u64>,
 
-    /// This property defines the overall status or confirmation for the calendar component.
-    #[skip]
-    pub status: Option<()>,
+    /// This property defines the overall status or
+    /// confirmation for the calendar component.
+    pub status: Option<Status>,
 
-    /// This property defines a short summary or subject for the calendar component.
+    /// This property defines a short summary or subject
+    /// for the calendar component.
     pub summary: Option<String>,
 
-    /// This property defines whether or not an event is transparent to busy time searches.
-    #[skip]
-    pub transp: Option<()>,
-    #[skip]
-    pub url: Option<()>,
-    #[skip]
-    pub recurid: Option<()>,
+    /// This property defines whether or not an event is
+    /// transparent to busy time searches.
+    pub transp: Option<Transparency>,
+
+    /// This property defines a Uniform Resource Locator (URL)
+    /// associated with the iCalendar object.
+    pub url: Option<Url>,
+
+    /// This property is used in conjunction with the "UID" and
+    /// "SEQUENCE" properties to identify a specific instance of a
+    /// recurring "VEVENT", "VTODO", or "VJOURNAL" calendar component.
+    /// The property value is the original value of the "DTSTART" property
+    /// of the recurrence instance.
+    pub recurid: Option<DTStamp>,
 
     // optional, should not appeare more than once
     #[skip]

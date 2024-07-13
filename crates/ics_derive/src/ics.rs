@@ -17,18 +17,26 @@ pub fn derive_ics_for_struct(DataStruct { fields, .. }: DataStruct) -> TokenStre
         let Some(ident) = ident else {
             todo!("currently unnamed structs are not supported")
         };
-        let mut display = ident.to_string().to_uppercase();
+        let mut display = Some(ident.to_string().to_uppercase());
         if find_attribute_with_key(&attrs, "skip").is_some() {
             return quote! {};
         }
 
         if let Some(attr) = find_attribute_with_key(&attrs, "key") {
             if let Some(literal) = get_key_literal_from_namevalue(attr) {
-                display = literal;
+                display = Some(literal);
             };
         }
 
-        let format_string = format!("{display}:{{}}\n");
+        if find_attribute_with_key(&attrs, "transparent").is_some() {
+            display = None;
+        }
+
+        let format_string = if let Some(display) = display {
+            format!("{display}:{{}}\n")
+        } else {
+            "{}\n".to_string()
+        };
 
         match &ty {
             syn::Type::Path(TypePath {

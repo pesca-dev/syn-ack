@@ -3,5 +3,16 @@ name = "syn-ack"
 version = "0.1.0"
 edition = "2021"
 
+[workspace]
+members = ["crates/*"]
+
 [dependencies]
-rocket = "0.5.1"
+ics = { path = "./crates/ics/" }
+argon2 = "0.5.3"
+chrono = "0.4.38"
+dotenv = "0.15.0"
+hmac = "0.12.1"
+jwt = "0.16.0"
+rocket = { version = "0.5.1", features = ["json"] }
+serde = { version = "1.0.203", features = ["derive"] }
+sha2 = "0.10.8"

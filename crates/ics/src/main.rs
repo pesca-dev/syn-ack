@@ -1,14 +1,15 @@
-use ics::{CalProps, Eventc};
+use ics::{Calendar, Components, Eventc};
+use url::Url;
 
 fn main() {
     let evt = Eventc::default()
+        .with_description("Some Desc")
+        .with_summary("Some Summary")
         .with_dtstart(chrono::Utc::now())
-        .with_location("OHP 17\nRaum 16");
-    println!("{}\n\n", evt);
+        .with_location("OHP 17\\nRaum 16")
+        .with_url(Url::parse("https://example.com").unwrap());
 
-    let mut props = CalProps::new();
+    let cal = Calendar::default().with_components(vec![Components::Eventc(evt)]);
 
-    props.x_prop = vec!["Foo".into(), "bar".into()];
-
-    println!("{}", props);
+    println!("{cal}")
 }
