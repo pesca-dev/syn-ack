@@ -2,7 +2,7 @@ use ics::{Calendar, Components, Eventc};
 use url::Url;
 
 fn main() {
-    let evt = Eventc::default()
+    let evt = Eventc::new()
         .with_description("Some Desc")
         .with_summary("Some Summary")
         .with_dtstart(chrono::Utc::now())

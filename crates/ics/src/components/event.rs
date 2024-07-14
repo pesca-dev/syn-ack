@@ -114,3 +114,14 @@ pub struct Eventc {
     #[skip]
     pub iana_prop: Vec<()>,
 }
+
+impl Eventc {
+    pub fn new() -> Eventc {
+        Eventc {
+            dtstamp: DTStamp {
+                date: Some(chrono::Utc::now()),
+            },
+            ..Default::default()
+        }
+    }
+}
