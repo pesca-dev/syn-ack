@@ -17,3 +17,11 @@ impl std::fmt::Display for Uid {
         f.write_str(self.inner.as_str())
     }
 }
+
+impl From<&str> for Uid {
+    fn from(value: &str) -> Self {
+        Self {
+            inner: value.to_string(),
+        }
+    }
+}
