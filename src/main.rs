@@ -1,4 +1,5 @@
 mod api;
+mod auth;
 mod jwt;
 
 use rocket::{get, launch, routes};

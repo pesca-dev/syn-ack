@@ -11,7 +11,7 @@ use rocket::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::jwt;
+use crate::{auth::User, jwt};
 
 #[derive(Clone, Debug, Default)]
 pub struct MyGuard {
@@ -68,6 +68,19 @@ impl<'r> FromRequest<'r> for Authorization {
     }
 }
 
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for User {
+    type Error = ();
+
+    async fn from_request(request: &'r rocket::Request<'_>) -> Outcome<Self, Self::Error> {
+        Authorization::from_request(request).await.map(
+            |Authorization(jwt::Accesstoken { sub, .. })| {
+                User::find_username(sub).expect("Valid JWT but no user found")
+            },
+        )
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 struct LoginRequest {
     pub username: String,
@@ -118,12 +131,10 @@ fn login(auth: Json<LoginRequest>) -> Result<LoginResponse, Status> {
 fn register() {}
 
 #[get("/authorized")]
-async fn authorized(auth: Authorization, g: &State<MyGuard>) -> String {
-    let Authorization(token) = auth;
-
+async fn authorized(user: User, g: &State<MyGuard>) -> String {
     let mut counter = g.counter.lock().await;
     *counter += 1;
-    format!("Hey {}, called {counter}", token.sub)
+    format!("Hey {}, called {counter}", user.username)
 }
 
 pub fn routes() -> Vec<rocket::Route> {
