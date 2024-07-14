@@ -1,7 +1,7 @@
 use ics_derive::{Ics, Utils};
 use url::Url;
 
-use crate::{Class, DTStamp, Geo, Status, Transparency, Uid};
+use crate::{Class, DTStamp, Geo, Recur, Status, Transparency, Uid};
 
 /// Struct for representing an event entry in a calendar.
 #[derive(Default, Debug, Clone, PartialEq, Eq, Ics, Utils)]
@@ -80,7 +80,7 @@ pub struct Eventc {
 
     // optional, should not appeare more than once
     #[skip]
-    pub rrule: Option<()>,
+    pub rrule: Option<Recur>,
 
     // both may appear, but mutually exclusive
     // TODO: maybe introduce enum for that
