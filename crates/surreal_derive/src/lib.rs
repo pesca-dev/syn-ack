@@ -29,31 +29,12 @@ pub fn derive_repository(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         });
     });
 
-    let repository_ident = format_ident!("{ident}Repository");
+    let create_payload_ident = format_ident!("Create{ident}Payload");
 
     let gen = quote! {
-        #[derive(Debug, Default, Clone, Hash, PartialEq)]
-        struct #repository_ident {
-            id: Option<surrealdb::sql::Thing>,
+        #[derive(Debug, Default, Clone, Hash, PartialEq, Serialize, Deserialize)]
+        pub struct #create_payload_ident {
             #(#field_declarations)*
-        }
-
-        impl #repository_ident {
-            pub fn id(&self) -> Option<String> {
-                self.id.as_ref().map(|id| format!("{}:{}", id.tb, id.id))
-            }
-        }
-
-        impl From<#repository_ident> for #ident{
-            fn from(value: #repository_ident) -> #ident {
-                let id = value.id().unwrap_or_default();
-                let #repository_ident { #(#field_names)* .. } = value;
-
-                #ident {
-                    id,
-                    #(#field_names)*
-                }
-            }
         }
     };
 
