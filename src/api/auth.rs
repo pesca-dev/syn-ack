@@ -41,7 +41,9 @@ impl Authorization {
                 .expect("Unreachable")
                 .into(),
         )
-        .map_err(|_| ())?;
+        .map_err(|e| {
+            eprintln!("{e}");
+        })?;
 
         Ok(Authorization(token))
     }
@@ -164,7 +166,7 @@ mod tests {
 
     #[test]
     fn test_authorization_from_bearer_success() {
-        std::env::set_var("ACCESS_JWT_KEY", "ACCESS_JWT_KEY");
+        std::env::set_var("ACCESS_JWT_KEY", "some-key");
 
         let jwt_token = jwt::Accesstoken::new("foo");
 
