@@ -11,7 +11,11 @@ use rocket::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{auth::User, jwt};
+use crate::{
+    jwt,
+    repositories::{CreateUserPayload, User},
+    services::UserService,
+};
 
 #[derive(Clone, Debug, Default)]
 pub struct MyGuard {
@@ -73,11 +77,20 @@ impl<'r> FromRequest<'r> for User {
     type Error = ();
 
     async fn from_request(request: &'r rocket::Request<'_>) -> Outcome<Self, Self::Error> {
-        Authorization::from_request(request).await.map(
-            |Authorization(jwt::Accesstoken { sub, .. })| {
-                User::find_username(sub).expect("Valid JWT but no user found")
-            },
-        )
+        // first check, if we have a valid JWT attached
+        let Authorization(token) = match Authorization::from_request(request).await {
+            rocket::outcome::Outcome::Success(auth) => auth,
+            rocket::outcome::Outcome::Error(e) => return Outcome::Error(e),
+            rocket::outcome::Outcome::Forward(e) => return Outcome::Forward(e),
+        };
+
+        // then try to find the user
+        // let Some(user) = User::find_username(&token.sub).await else {
+        //     // TODO: log error to console
+        //     return Outcome::Error((Status::InternalServerError, ()));
+        // };
+
+        Outcome::Success(User::default())
     }
 }
 
@@ -127,8 +140,12 @@ fn login(auth: Json<LoginRequest>) -> Result<LoginResponse, Status> {
     )))
 }
 
-#[post("/register")]
-fn register() {}
+#[post("/register", data = "<payload>")]
+async fn register(payload: Json<CreateUserPayload>, service: &State<UserService>) {
+    let result = service.create_user(payload.into_inner()).await;
+
+    println!("{result:?}");
+}
 
 #[get("/authorized")]
 async fn authorized(user: User, g: &State<MyGuard>) -> String {

@@ -9,7 +9,7 @@ fn get_version() -> &'static str {
     "v1"
 }
 
-pub fn mount(instance: Rocket<Build>) -> Rocket<Build> {
+pub async fn mount(instance: Rocket<Build>) -> Rocket<Build> {
     instance
         .mount(BASE, routes![get_version])
         .mount([BASE, "auth"].concat(), auth::routes())
