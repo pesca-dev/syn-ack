@@ -1,29 +1,15 @@
-mod api;
-mod auth;
-mod jwt;
+use syn_ack::{api, services, use_db};
 
-use rocket::{get, launch, routes};
-
-#[get("/")]
-fn index() -> &'static str {
-    "Hello, World!"
-}
-
-trait Registerable {
-    fn mount_fn(self, func: &dyn Fn(Self) -> Self) -> Self;
-}
-
-impl Registerable for rocket::Rocket<rocket::Build> {
-    fn mount_fn(self, func: &dyn Fn(Self) -> Self) -> Self {
-        func(self)
-    }
-}
-
-#[launch]
-fn rocket() -> _ {
+#[rocket::launch]
+async fn rocket() -> _ {
     dotenv::dotenv().ok();
 
-    rocket::build()
-        .mount("/", routes![index])
-        .mount_fn(&api::mount)
+    let db = use_db().await;
+    println!("{db:?}");
+
+    let r = rocket::build();
+
+    let r = api::mount(r).await;
+
+    services::mount(r).await
 }
