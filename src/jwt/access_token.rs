@@ -1,5 +1,6 @@
 use std::{env, error::Error};
 
+use anyhow::Result;
 use chrono::Duration;
 use hmac::{Hmac, Mac};
 use jwt::{SignWithKey, VerifyWithKey};
@@ -14,7 +15,7 @@ pub struct Accesstoken {
     pub scopes: Vec<String>,
 }
 
-fn key() -> Result<Hmac<Sha256>, Box<dyn Error>> {
+fn key() -> Result<Hmac<Sha256>> {
     let key = env::var("ACCESS_JWT_KEY").expect("JWT key should be given");
 
     Ok(Hmac::new_from_slice(key.as_bytes())?)
@@ -43,13 +44,13 @@ impl Accesstoken {
         }
     }
 
-    pub fn sign(self) -> Result<String, Box<dyn Error>> {
+    pub fn sign(self) -> Result<String> {
         let key = key()?;
 
         Ok(self.sign_with_key(&key)?)
     }
 
-    pub fn extract(token: String) -> Result<Accesstoken, Box<dyn Error>> {
+    pub fn extract(token: String) -> Result<Accesstoken> {
         let key = key()?;
 
         Ok(token.verify_with_key(&key)?)
