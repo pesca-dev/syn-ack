@@ -1,4 +1,4 @@
-use std::{env, error::Error};
+use std::env;
 
 use anyhow::Result;
 use chrono::Duration;
