@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     jwt,
     repositories::{CreateUserPayload, User},
-    services::UserService,
+    services::{AuthService, TokenPair, UserService},
 };
 
 #[derive(Clone, Debug, Default)]
@@ -79,6 +79,11 @@ impl<'r> FromRequest<'r> for User {
     type Error = ();
 
     async fn from_request(request: &'r rocket::Request<'_>) -> Outcome<Self, Self::Error> {
+        let Some(user_service) = request.rocket().state::<UserService>() else {
+            eprintln!("Could not find UserService");
+            return Outcome::Error((Status::InternalServerError, ()));
+        };
+
         // first check, if we have a valid JWT attached
         let Authorization(token) = match Authorization::from_request(request).await {
             rocket::outcome::Outcome::Success(auth) => auth,
@@ -87,12 +92,12 @@ impl<'r> FromRequest<'r> for User {
         };
 
         // then try to find the user
-        // let Some(user) = User::find_username(&token.sub).await else {
-        //     // TODO: log error to console
-        //     return Outcome::Error((Status::InternalServerError, ()));
-        // };
+        let Some(user) = user_service.find_user_by_id(&token.sub).await else {
+            // TODO: log error to console
+            return Outcome::Error((Status::InternalServerError, ()));
+        };
 
-        Outcome::Success(User::default())
+        Outcome::Success(user)
     }
 }
 
@@ -100,25 +105,6 @@ impl<'r> FromRequest<'r> for User {
 struct LoginRequest {
     pub username: String,
     pub password: String,
-}
-
-#[derive(Serialize)]
-struct TokenPair {
-    access_token: String,
-    refresh_token: String,
-}
-
-impl TokenPair {
-    pub fn new(username: impl ToString) -> Result<Self, Box<dyn Error>> {
-        let username = username.to_string();
-        let access_token = jwt::Accesstoken::new(&username).sign()?;
-        let refresh_token = jwt::Refreshtoken::new(&username).sign()?;
-
-        Ok(TokenPair {
-            access_token,
-            refresh_token,
-        })
-    }
 }
 
 #[derive(Responder)]
@@ -131,15 +117,20 @@ enum LoginResponse {
 }
 
 #[post("/login", data = "<auth>")]
-fn login(auth: Json<LoginRequest>) -> Result<LoginResponse, Status> {
-    let LoginRequest {
-        username,
-        password: _password,
-    } = auth.into_inner();
+async fn login(
+    auth: Json<LoginRequest>,
+    auth_service: &State<AuthService>,
+) -> Result<LoginResponse, Status> {
+    let LoginRequest { username, password } = auth.into_inner();
 
-    Ok(LoginResponse::Success(Json(
-        TokenPair::new(username).map_err(|_| Status::InternalServerError)?,
-    )))
+    let token = match auth_service.login(username, password).await {
+        Ok(token) => token,
+        Err(_) => {
+            return Ok(LoginResponse::Error(Status::Unauthorized));
+        }
+    };
+
+    Ok(LoginResponse::Success(Json(token)))
 }
 
 #[post("/register", data = "<payload>")]

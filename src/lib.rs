@@ -35,7 +35,7 @@ macro_rules! define_repository {
     ($s:tt, $($t:tt)*) => {
         #[derive(Default, Clone, Debug, Hash, Serialize, Deserialize, Repository)]
         pub struct $s {
-            id: Option<surrealdb::sql::Thing>,
+            pub id: Option<surrealdb::sql::Thing>,
             $($t)*
         }
     };
