@@ -39,6 +39,18 @@ impl AuthRepository {
         Ok(result)
     }
 
+    pub async fn update(&self, session: Session) -> Result<()> {
+        assert!(session.id.is_some());
+
+        let _: Option<Session> = self
+            .db
+            .update(session.id.as_ref().expect("unreachable"))
+            .content(session)
+            .await?;
+
+        Ok(())
+    }
+
     pub async fn find_session_by_id(&self, id: impl TryInto<Thing>) -> Result<Option<Session>> {
         let Ok(thing) = TryInto::<Thing>::try_into(id) else {
             return Err(anyhow::Error::msg("invalid id given"));
@@ -46,5 +58,19 @@ impl AuthRepository {
 
         let result: Option<Session> = self.db.select(thing).await?;
         Ok(result)
+    }
+
+    pub async fn find_session_by_last_refresh(
+        &self,
+        last_refresh: impl ToString,
+    ) -> Result<Option<Session>> {
+        let mut result = self
+            .db
+            .query("SELECT * FROM type::table($table) where last_refresh = $last_refresh;")
+            .bind(("table", Self::TABLE))
+            .bind(("last_refresh", last_refresh.to_string()))
+            .await?;
+
+        Ok(result.take(0)?)
     }
 }

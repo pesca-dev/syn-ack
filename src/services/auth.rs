@@ -63,6 +63,46 @@ impl AuthService {
 
         self.user_service.find_user_by_id(user_id).await
     }
+
+    pub async fn find_session_by_last_refresh(
+        &self,
+        last_refresh: impl ToString,
+    ) -> Option<Session> {
+        match self
+            .session_repository
+            .find_session_by_last_refresh(last_refresh)
+            .await
+        {
+            Ok(maybe_session) => maybe_session,
+            Err(e) => {
+                eprintln!("Error while finding session: {e}");
+                None
+            }
+        }
+    }
+
+    pub async fn refresh(&self, last_refresh: impl ToString) -> Result<TokenPair> {
+        let Some(mut session) = self.find_session_by_last_refresh(last_refresh).await else {
+            todo!()
+        };
+
+        let session_id = session.id.clone();
+        let last_refresh = uuid::Uuid::new_v4().to_string();
+        session.last_refresh.clone_from(&last_refresh);
+
+        if let Err(e) = self.session_repository.update(session).await {
+            return Err(anyhow::Error::msg(format!("Error refreshing session: {e}")));
+        }
+
+        TokenPair::new(
+            session_id.expect("tried to refresh invalid session"),
+            last_refresh,
+        )
+    }
+
+    pub async fn logout(&self, session_id: impl ToString) {
+        todo!()
+    }
 }
 
 #[derive(Serialize)]
