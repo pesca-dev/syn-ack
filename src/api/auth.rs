@@ -1,4 +1,4 @@
-use std::{error::Error, sync::Arc};
+use std::sync::Arc;
 
 use rocket::{
     get,
@@ -79,8 +79,8 @@ impl<'r> FromRequest<'r> for User {
     type Error = ();
 
     async fn from_request(request: &'r rocket::Request<'_>) -> Outcome<Self, Self::Error> {
-        let Some(user_service) = request.rocket().state::<UserService>() else {
-            eprintln!("Could not find UserService");
+        let Some(auth_service) = request.rocket().state::<AuthService>() else {
+            println!("Could not find UserService");
             return Outcome::Error((Status::InternalServerError, ()));
         };
 
@@ -92,7 +92,7 @@ impl<'r> FromRequest<'r> for User {
         };
 
         // then try to find the user
-        let Some(user) = user_service.find_user_by_id(&token.sub).await else {
+        let Some(user) = auth_service.fetch_user_for_session(&token.sub).await else {
             // TODO: log error to console
             return Outcome::Error((Status::InternalServerError, ()));
         };
