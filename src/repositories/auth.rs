@@ -26,15 +26,13 @@ impl AuthRepository {
     pub async fn create_session(&self, user_id: impl ToString) -> Result<Option<Session>> {
         let result: Option<Session> = self
             .db
-            .create(Self::TABLE)
+            .create((Self::TABLE, uuid::Uuid::new_v4().to_string()))
             .content(Session {
                 user_id: user_id.to_string(),
                 created_at: chrono::Utc::now(),
                 ..Default::default()
             })
-            .await?
-            .first()
-            .cloned();
+            .await?;
 
         Ok(result)
     }

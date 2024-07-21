@@ -33,16 +33,14 @@ impl UserRepository {
     ) -> Result<Option<User>> {
         let result: Option<User> = self
             .db
-            .create(Self::TABLE)
+            .create((Self::TABLE, uuid::Uuid::new_v4().to_string()))
             .content(User {
                 username,
                 password,
                 email,
                 ..Default::default()
             })
-            .await?
-            .first()
-            .cloned();
+            .await?;
 
         Ok(result)
     }
@@ -62,6 +60,17 @@ impl UserRepository {
             .query("SELECT * FROM type::table($table) where username = $username;")
             .bind(("table", Self::TABLE))
             .bind(("username", username.to_string()))
+            .await?;
+
+        Ok(result.take(0)?)
+    }
+
+    pub async fn find_by_email(&self, email: impl ToString) -> Result<Option<User>> {
+        let mut result = self
+            .db
+            .query("SELECT * FROM type::table($table) where email = $email;")
+            .bind(("table", Self::TABLE))
+            .bind(("email", email.to_string()))
             .await?;
 
         Ok(result.take(0)?)
