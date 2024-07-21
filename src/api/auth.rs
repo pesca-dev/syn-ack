@@ -134,10 +134,15 @@ async fn login(
 }
 
 #[post("/register", data = "<payload>")]
-async fn register(payload: Json<CreateUserPayload>, service: &State<UserService>) {
-    let result = service.create_user(payload.into_inner()).await;
-
-    println!("{result:?}");
+async fn register(payload: Json<CreateUserPayload>, service: &State<UserService>) -> Json<Status> {
+    match service.create_user(payload.into_inner()).await {
+        Ok(Some(_)) => Json(Status::Accepted),
+        Ok(None) => Json(Status::BadRequest),
+        Err(e) => {
+            println!("Registarion error: {e}");
+            Json(Status::InternalServerError)
+        }
+    }
 }
 
 #[get("/authorized")]
