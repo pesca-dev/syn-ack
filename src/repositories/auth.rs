@@ -8,6 +8,7 @@ use crate::{define_repository, use_db};
 
 define_repository!(Session,
     pub user_id: String,
+    pub last_refresh: String,
     pub created_at: chrono::DateTime<Utc>
 );
 
@@ -30,6 +31,7 @@ impl AuthRepository {
             .content(Session {
                 user_id: user_id.to_string(),
                 created_at: chrono::Utc::now(),
+                last_refresh: uuid::Uuid::new_v4().to_string(),
                 ..Default::default()
             })
             .await?;

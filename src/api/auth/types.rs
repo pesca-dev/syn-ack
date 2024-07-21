@@ -1,20 +1,18 @@
 use std::sync::Arc;
 
 use rocket::{
-    get,
     http::Status,
-    post,
     request::{FromRequest, Outcome},
     serde::json::Json,
     tokio::sync::Mutex,
-    Responder, State,
+    Responder,
 };
 use serde::{Deserialize, Serialize};
 
 use crate::{
     jwt,
-    repositories::{CreateUserPayload, User},
-    services::{AuthService, TokenPair, UserService},
+    repositories::User,
+    services::{AuthService, TokenPair},
 };
 
 #[derive(Clone, Debug, Default)]
@@ -23,7 +21,7 @@ pub struct MyGuard {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-struct Authorization(jwt::Accesstoken);
+pub struct Authorization(pub jwt::Accesstoken);
 
 impl Authorization {
     const BEARER: &'static str = "Bearer ";
@@ -102,58 +100,18 @@ impl<'r> FromRequest<'r> for User {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-struct LoginRequest {
+pub struct LoginRequest {
     pub username: String,
     pub password: String,
 }
 
 #[derive(Responder)]
-enum LoginResponse {
+pub enum LoginResponse {
     #[response(status = 202)]
     Success(Json<TokenPair>),
 
     #[response(content_type = "json")]
     Error(Status),
-}
-
-#[post("/login", data = "<auth>")]
-async fn login(
-    auth: Json<LoginRequest>,
-    auth_service: &State<AuthService>,
-) -> Result<LoginResponse, Status> {
-    let LoginRequest { username, password } = auth.into_inner();
-
-    let token = match auth_service.login(username, password).await {
-        Ok(token) => token,
-        Err(_) => {
-            return Ok(LoginResponse::Error(Status::Unauthorized));
-        }
-    };
-
-    Ok(LoginResponse::Success(Json(token)))
-}
-
-#[post("/register", data = "<payload>")]
-async fn register(payload: Json<CreateUserPayload>, service: &State<UserService>) -> Json<Status> {
-    match service.create_user(payload.into_inner()).await {
-        Ok(Some(_)) => Json(Status::Accepted),
-        Ok(None) => Json(Status::BadRequest),
-        Err(e) => {
-            println!("Registarion error: {e}");
-            Json(Status::InternalServerError)
-        }
-    }
-}
-
-#[get("/authorized")]
-async fn authorized(user: User, g: &State<MyGuard>) -> String {
-    let mut counter = g.counter.lock().await;
-    *counter += 1;
-    format!("Hey {}, called {counter}", user.username)
-}
-
-pub fn routes() -> Vec<rocket::Route> {
-    rocket::routes![login, register, authorized]
 }
 
 #[cfg(test)]

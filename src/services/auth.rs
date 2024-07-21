@@ -40,13 +40,16 @@ impl AuthService {
             return Err(Error::msg("credentials do not match"));
         };
 
-        let Ok(Some(Session { id: Some(id), .. })) =
-            self.session_repository.create_session(id).await
+        let Ok(Some(Session {
+            id: Some(id),
+            last_refresh,
+            ..
+        })) = self.session_repository.create_session(id).await
         else {
             return Err(Error::msg("failed to create session"));
         };
 
-        TokenPair::new(id)
+        TokenPair::new(id, last_refresh)
     }
 
     pub async fn fetch_user_for_session(&self, session_id: impl ToString) -> Option<User> {
@@ -69,10 +72,9 @@ pub struct TokenPair {
 }
 
 impl TokenPair {
-    pub fn new(username: impl ToString) -> Result<Self> {
-        let username = username.to_string();
-        let access_token = jwt::Accesstoken::new(&username).sign()?;
-        let refresh_token = jwt::Refreshtoken::new(&username).sign()?;
+    pub fn new(sub: impl ToString, refresh: impl ToString) -> Result<Self> {
+        let access_token = jwt::Accesstoken::new(sub).sign()?;
+        let refresh_token = jwt::Refreshtoken::new(refresh).sign()?;
 
         Ok(TokenPair {
             access_token,
