@@ -1,6 +1,6 @@
 use anyhow::{Error, Result};
 use serde::Serialize;
-use tracing::{debug, trace};
+use tracing::debug;
 
 use crate::jwt::Refreshtoken;
 use crate::{

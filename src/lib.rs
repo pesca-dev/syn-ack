@@ -4,21 +4,28 @@ pub mod repositories;
 pub mod services;
 pub mod utils;
 
+use rocket::{Build, Rocket};
+use std::env;
 use surrealdb::{
     engine::remote::ws::{Client, Ws},
     opt::auth::Root,
     Surreal,
 };
 
+macro_rules! get_env {
+    ($name:expr) => {
+        env::var($name).expect(&format!("{} should be given", $name))
+    };
+}
+
 pub async fn use_db() -> Surreal<Client> {
-    let db = Surreal::new::<Ws>("127.0.0.1:8080")
+    let db = Surreal::new::<Ws>(get_env!("DB_HOST"))
         .await
         .expect("Could not establish connection to db");
 
-    // TODO: replace with some reasonable values (e.g., from ENV)
     db.signin(Root {
-        username: "root",
-        password: "root",
+        username: &get_env!("DB_USER"),
+        password: &get_env!("DB_PASSWORD"),
     })
     .await
     .expect("Could not login to database");
@@ -39,4 +46,12 @@ macro_rules! define_repository {
             $($t)*
         }
     };
+}
+
+pub async fn start() -> Rocket<Build> {
+    let r = rocket::build();
+
+    let r = api::mount(r).await;
+
+    services::mount(r).await
 }

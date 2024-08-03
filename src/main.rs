@@ -1,4 +1,4 @@
-use syn_ack::{api, services, use_db};
+use syn_ack::start;
 use tracing_subscriber::{filter, layer::SubscriberExt, util::SubscriberInitExt};
 
 fn init() {
@@ -21,11 +21,5 @@ fn init() {
 async fn rocket() -> _ {
     init();
 
-    let db = use_db().await;
-
-    let r = rocket::build();
-
-    let r = api::mount(r).await;
-
-    services::mount(r).await
+    start().await
 }
