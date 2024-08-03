@@ -46,7 +46,7 @@ impl Authorization {
         let Bearer(token) = Bearer::from_str(&token.to_string())?;
 
         let token = jwt::Accesstoken::extract(token).map_err(|e| {
-            eprintln!("{e}");
+            tracing::debug!("{e}");
             anyhow::Error::msg("Could not create AccessToken")
         })?;
 
@@ -85,7 +85,7 @@ impl<'r> FromRequest<'r> for Session {
 
     async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         let Some(auth_service) = request.rocket().state::<AuthService>() else {
-            println!("Could not find AuthService");
+            tracing::error!("Could not find AuthService");
             return Outcome::Error((Status::InternalServerError, ()));
         };
 
@@ -110,7 +110,7 @@ impl<'r> FromRequest<'r> for User {
 
     async fn from_request(request: &'r rocket::Request<'_>) -> Outcome<Self, Self::Error> {
         let Some(auth_service) = request.rocket().state::<AuthService>() else {
-            println!("Could not find AuthService");
+            tracing::error!("Could not find AuthService");
             return Outcome::Error((Status::InternalServerError, ()));
         };
 
@@ -136,7 +136,7 @@ impl RefreshRequest {
         let Bearer(token) = Bearer::from_str(&token.to_string())?;
 
         let token = jwt::Refreshtoken::extract(token).map_err(|e| {
-            eprintln!("RefreshToken error: {e}");
+            tracing::trace!("RefreshToken error: {e}");
             anyhow::Error::msg("Could not create RefreshToken")
         })?;
 

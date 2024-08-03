@@ -3340,6 +3340,8 @@ dependencies = [
  "sha2",
  "surreal_derive",
  "surrealdb",
+ "tracing",
+ "tracing-subscriber",
  "uuid",
 ]
 

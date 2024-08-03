@@ -1,5 +1,6 @@
 use anyhow::{Error, Result};
 use serde::Serialize;
+use tracing::{debug, trace};
 
 use crate::jwt::Refreshtoken;
 use crate::{
@@ -85,7 +86,7 @@ impl AuthService {
             .find_session_by_last_refresh(last_refresh)
             .await
             .unwrap_or_else(|e| {
-                eprintln!("Error while finding session: {e}");
+                debug!("Error while finding session: {e}");
                 None
             })
     }
