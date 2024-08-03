@@ -1,4 +1,5 @@
 use anyhow::Result;
+use tracing::debug;
 
 use crate::{
     repositories::{CreateUserPayload, User, UserRepository},
@@ -36,7 +37,7 @@ impl UserService {
         match self.repo.find_by_username(username).await {
             Ok(maybe_user) => maybe_user,
             Err(e) => {
-                eprintln!("Error while finding user: {e}");
+                debug!("Error while finding user: {e}");
                 None
             }
         }
@@ -46,7 +47,7 @@ impl UserService {
         match self.repo.find_by_id(id.to_string()).await {
             Ok(maybe_user) => maybe_user,
             Err(e) => {
-                eprintln!("Error while finding user: {e}");
+                debug!("Error while finding user: {e}");
                 None
             }
         }
@@ -56,7 +57,7 @@ impl UserService {
         match self.repo.find_by_email(email).await {
             Ok(maybe_user) => maybe_user,
             Err(e) => {
-                eprintln!("Error while finding user: {e}");
+                debug!("Error while finding user: {e}");
                 None
             }
         }

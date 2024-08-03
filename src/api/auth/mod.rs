@@ -1,4 +1,5 @@
 use rocket::{get, http::Status, post, serde::json::Json, State};
+use tracing::debug;
 
 use crate::{
     repositories::{CreateUserPayload, Session, User},
@@ -32,7 +33,7 @@ async fn register(payload: Json<CreateUserPayload>, service: &State<UserService>
         Ok(Some(_)) => Json(Status::Accepted),
         Ok(None) => Json(Status::BadRequest),
         Err(e) => {
-            println!("Registration error: {e}");
+            debug!("Registration error: {e}");
             Json(Status::InternalServerError)
         }
     }
@@ -43,7 +44,7 @@ async fn refresh(refresh_request: RefreshRequest, service: &State<AuthService>) 
     match service.refresh(refresh_request.0).await {
         Ok(token) => RefreshResponse::Success(Json(token)),
         Err(e) => {
-            println!("Refresh error: {e}");
+            debug!("Refresh error: {e}");
             RefreshResponse::Error(Status::Unauthorized)
         }
     }
@@ -52,7 +53,7 @@ async fn refresh(refresh_request: RefreshRequest, service: &State<AuthService>) 
 #[get("/logout")]
 async fn logout(session: Session, service: &State<AuthService>) {
     if let Err(e) = service.logout(session).await {
-        eprintln!("Logout error: {e}");
+        debug!("Logout error: {e}");
     }
 }
 
