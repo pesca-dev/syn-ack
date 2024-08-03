@@ -1,13 +1,13 @@
-mod types;
-
-pub use self::types::*;
-
 use rocket::{get, http::Status, post, serde::json::Json, State};
 
 use crate::{
-    repositories::{CreateUserPayload, User},
+    repositories::{CreateUserPayload, Session, User},
     services::{AuthService, UserService},
 };
+
+pub use self::types::*;
+
+mod types;
 
 #[post("/login", data = "<auth>")]
 async fn login(
@@ -32,20 +32,28 @@ async fn register(payload: Json<CreateUserPayload>, service: &State<UserService>
         Ok(Some(_)) => Json(Status::Accepted),
         Ok(None) => Json(Status::BadRequest),
         Err(e) => {
-            println!("Registarion error: {e}");
+            println!("Registration error: {e}");
             Json(Status::InternalServerError)
         }
     }
 }
 
 #[post("/refresh")]
-async fn refresh() {
-    todo!()
+async fn refresh(refresh_request: RefreshRequest, service: &State<AuthService>) -> RefreshResponse {
+    match service.refresh(refresh_request.0).await {
+        Ok(token) => RefreshResponse::Success(Json(token)),
+        Err(e) => {
+            println!("Refresh error: {e}");
+            RefreshResponse::Error(Status::Unauthorized)
+        }
+    }
 }
 
 #[get("/logout")]
-async fn logout() {
-    todo!()
+async fn logout(session: Session, service: &State<AuthService>) {
+    if let Err(e) = service.logout(session).await {
+        eprintln!("Logout error: {e}");
+    }
 }
 
 #[get("/authorized")]

@@ -1,3 +1,4 @@
+use std::str::FromStr;
 use std::sync::Arc;
 
 use rocket::{
@@ -5,13 +6,13 @@ use rocket::{
     request::{FromRequest, Outcome},
     serde::json::Json,
     tokio::sync::Mutex,
-    Responder,
+    Request, Responder,
 };
 use serde::{Deserialize, Serialize};
 
 use crate::{
     jwt,
-    repositories::User,
+    repositories::{Session, User},
     services::{AuthService, TokenPair},
 };
 
@@ -21,26 +22,32 @@ pub struct MyGuard {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Bearer(pub String);
+
+const BEARER: &str = "Bearer ";
+
+impl FromStr for Bearer {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if !s.starts_with(BEARER) {
+            return Err(anyhow::Error::msg("Token does not start with 'Bearer '"));
+        }
+
+        return Ok(Bearer(s.strip_prefix(BEARER).expect("unreachable").into()));
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Authorization(pub jwt::Accesstoken);
 
 impl Authorization {
-    const BEARER: &'static str = "Bearer ";
+    pub fn from_bearer(token: impl ToString) -> anyhow::Result<Authorization> {
+        let Bearer(token) = Bearer::from_str(&token.to_string())?;
 
-    pub fn from_bearer(token: impl ToString) -> Result<Authorization, ()> {
-        let token = token.to_string();
-
-        if !token.starts_with(Self::BEARER) {
-            return Err(());
-        }
-
-        let token = jwt::Accesstoken::extract(
-            token
-                .strip_prefix(Self::BEARER)
-                .expect("Unreachable")
-                .into(),
-        )
-        .map_err(|e| {
+        let token = jwt::Accesstoken::extract(token).map_err(|e| {
             eprintln!("{e}");
+            anyhow::Error::msg("Could not create AccessToken")
         })?;
 
         Ok(Authorization(token))
@@ -73,12 +80,12 @@ impl<'r> FromRequest<'r> for Authorization {
 }
 
 #[rocket::async_trait]
-impl<'r> FromRequest<'r> for User {
+impl<'r> FromRequest<'r> for Session {
     type Error = ();
 
-    async fn from_request(request: &'r rocket::Request<'_>) -> Outcome<Self, Self::Error> {
+    async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         let Some(auth_service) = request.rocket().state::<AuthService>() else {
-            println!("Could not find UserService");
+            println!("Could not find AuthService");
             return Outcome::Error((Status::InternalServerError, ()));
         };
 
@@ -89,14 +96,78 @@ impl<'r> FromRequest<'r> for User {
             rocket::outcome::Outcome::Forward(e) => return Outcome::Forward(e),
         };
 
-        // then try to find the user
-        let Some(user) = auth_service.fetch_user_for_session(&token.sub).await else {
-            // TODO: log error to console
+        let Some(session) = auth_service.fetch_session_by_id(token.sub).await else {
+            return Outcome::Error((Status::Unauthorized, ()));
+        };
+
+        Outcome::Success(session)
+    }
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for User {
+    type Error = ();
+
+    async fn from_request(request: &'r rocket::Request<'_>) -> Outcome<Self, Self::Error> {
+        let Some(auth_service) = request.rocket().state::<AuthService>() else {
+            println!("Could not find AuthService");
             return Outcome::Error((Status::InternalServerError, ()));
+        };
+
+        // first try to fetch session
+        let Outcome::Success(session) = Session::from_request(request).await else {
+            return Outcome::Error((Status::Unauthorized, ()));
+        };
+
+        // then try to find the user
+        let Some(user) = auth_service.fetch_user_for_session(&session).await else {
+            return Outcome::Error((Status::Unauthorized, ()));
         };
 
         Outcome::Success(user)
     }
+}
+
+#[derive(Clone, Debug)]
+pub struct RefreshRequest(pub jwt::Refreshtoken);
+
+impl RefreshRequest {
+    pub fn from_bearer(token: impl ToString) -> anyhow::Result<RefreshRequest> {
+        let Bearer(token) = Bearer::from_str(&token.to_string())?;
+
+        let token = jwt::Refreshtoken::extract(token).map_err(|e| {
+            eprintln!("RefreshToken error: {e}");
+            anyhow::Error::msg("Could not create RefreshToken")
+        })?;
+
+        Ok(RefreshRequest(token))
+    }
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for RefreshRequest {
+    type Error = ();
+
+    async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        match request.headers().get_one("authorization") {
+            Some(token) => match Self::from_bearer(token) {
+                Ok(token) => Outcome::Success(token),
+                // upsi, not a valid token in general
+                Err(_) => Outcome::Error((Status::BadRequest, ())),
+            },
+            // we do not have the header
+            None => Outcome::Error((Status::Unauthorized, ())),
+        }
+    }
+}
+
+#[derive(Responder)]
+pub enum RefreshResponse {
+    #[response(status = 202)]
+    Success(Json<TokenPair>),
+
+    #[response(content_type = "json")]
+    Error(Status),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
@@ -127,11 +198,11 @@ mod tests {
         let access_token =
             Authorization::from_bearer(format!("Bearer {}", jwt_token.clone().sign().unwrap()));
 
-        assert_eq!(access_token, Ok(Authorization(jwt_token)))
+        assert_eq!(access_token.unwrap(), Authorization(jwt_token))
     }
 
     #[test]
     fn test_authorization_from_bearer_error() {
-        assert_eq!(Authorization::from_bearer("Bear foo"), Err(()))
+        assert!(Authorization::from_bearer("Bear foo").is_err())
     }
 }
