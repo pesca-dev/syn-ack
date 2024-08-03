@@ -3725,6 +3725,8 @@ name = "test-utils"
 version = "0.1.0"
 dependencies = [
  "dotenv",
+ "rocket",
+ "syn-ack",
 ]
 
 [[package]]
