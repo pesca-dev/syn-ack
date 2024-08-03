@@ -73,4 +73,14 @@ impl AuthRepository {
 
         Ok(result.take(0)?)
     }
+
+    pub async fn delete(&self, session: Session) -> Result<()> {
+        assert!(session.id.is_some());
+        let _: Option<Session> = self
+            .db
+            .delete(session.id.expect("Something went wrong"))
+            .await?;
+
+        Ok(())
+    }
 }

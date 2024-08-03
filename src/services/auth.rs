@@ -1,6 +1,7 @@
 use anyhow::{Error, Result};
 use serde::Serialize;
 
+use crate::jwt::Refreshtoken;
 use crate::{
     jwt,
     repositories::{AuthRepository, Session, User},
@@ -52,7 +53,19 @@ impl AuthService {
         TokenPair::new(id, last_refresh)
     }
 
-    pub async fn fetch_user_for_session(&self, session_id: impl ToString) -> Option<User> {
+    pub async fn fetch_session_by_id(&self, session_id: impl ToString) -> Option<Session> {
+        self.session_repository
+            .find_session_by_id(session_id.to_string())
+            .await
+            .ok()
+            .flatten()
+    }
+
+    pub async fn fetch_user_for_session(&self, session: &Session) -> Option<User> {
+        let Some(session_id) = &session.id else {
+            return None;
+        };
+
         let Ok(Some(Session { user_id, .. })) = self
             .session_repository
             .find_session_by_id(session_id.to_string())
@@ -68,22 +81,18 @@ impl AuthService {
         &self,
         last_refresh: impl ToString,
     ) -> Option<Session> {
-        match self
-            .session_repository
+        self.session_repository
             .find_session_by_last_refresh(last_refresh)
             .await
-        {
-            Ok(maybe_session) => maybe_session,
-            Err(e) => {
+            .unwrap_or_else(|e| {
                 eprintln!("Error while finding session: {e}");
                 None
-            }
-        }
+            })
     }
 
-    pub async fn refresh(&self, last_refresh: impl ToString) -> Result<TokenPair> {
-        let Some(mut session) = self.find_session_by_last_refresh(last_refresh).await else {
-            todo!()
+    pub async fn refresh(&self, token: Refreshtoken) -> Result<TokenPair> {
+        let Some(mut session) = self.find_session_by_last_refresh(token.sub).await else {
+            return Err(anyhow::Error::msg("Invalid last refresh"));
         };
 
         let session_id = session.id.clone();
@@ -100,8 +109,8 @@ impl AuthService {
         )
     }
 
-    pub async fn logout(&self, session_id: impl ToString) {
-        todo!()
+    pub async fn logout(&self, session: Session) -> Result<()> {
+        self.session_repository.delete(session).await
     }
 }
 
