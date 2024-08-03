@@ -5,7 +5,6 @@ pub mod services;
 pub mod utils;
 
 use rocket::{Build, Rocket};
-use std::env;
 use surrealdb::{
     engine::remote::ws::{Client, Ws},
     opt::auth::Root,
@@ -14,7 +13,10 @@ use surrealdb::{
 
 macro_rules! get_env {
     ($name:expr) => {
-        env::var($name).expect(&format!("{} should be given", $name))
+        std::env::var($name).expect(&format!("{} should be given", $name))
+    };
+    ($name:expr, $default:expr) => {
+        std::env::var($name).unwrap_or($default.into())
     };
 }
 
@@ -30,8 +32,8 @@ pub async fn use_db() -> Surreal<Client> {
     .await
     .expect("Could not login to database");
 
-    db.use_ns("syn_ack")
-        .use_db("syn_ack")
+    db.use_ns(get_env!("DB_NS", "syn_ack"))
+        .use_db(get_env!("DB_NS", "syn_ack"))
         .await
         .expect("could not select namespace");
     db
