@@ -61,7 +61,21 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      - name: Start SurrealDB
+        uses: jvllmr/surrealdb-action@2.0.0
+        with:
+          surrealdb-version: v1.5.4
+          surrealdb-port: 8080
+          surrealdb-user: root
+          surrealdb-password: root
+
       - run: cargo test
+        env:
+          REFRESH_JWT_KEY: "REFRESH"
+          ACCESS_JWT_KEY: "ACCESS"
+          DB_USER: "root"
+          DB_PASSWORD: "root"
+          DB_HOST: "127.0.0.1:8080"
 
   linting:
     name: Linting
