@@ -40,6 +40,7 @@ pub fn env() -> Env {
     Env
 }
 
-pub async fn client() -> Result<rocket::local::asynchronous::Client, rocket::Error> {
-    rocket::local::asynchronous::Client::tracked(syn_ack::start().await).await
+pub async fn client() -> Result<syn_ack::rocket::local::asynchronous::Client, syn_ack::rocket::Error>
+{
+    syn_ack::rocket::local::asynchronous::Client::tracked(syn_ack::start().await).await
 }
