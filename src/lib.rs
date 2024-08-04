@@ -4,6 +4,8 @@ pub mod repositories;
 pub mod services;
 pub mod utils;
 
+pub use rocket;
+
 use rocket::{Build, Rocket};
 use surrealdb::{
     engine::remote::ws::{Client, Ws},
