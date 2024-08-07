@@ -111,3 +111,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - run: cargo fmt -- --check
+
+  image:
+    needs: testing
+    uses: pesca-dev/syn-ack/.github/workflows/image.yml
+    secrets: inherit
