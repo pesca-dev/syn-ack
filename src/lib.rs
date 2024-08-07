@@ -35,7 +35,7 @@ pub async fn use_db() -> Surreal<Client> {
     .expect("Could not login to database");
 
     db.use_ns(get_env!("DB_NS", "syn_ack"))
-        .use_db(get_env!("DB_NS", "syn_ack"))
+        .use_db(get_env!("DB_DB", "syn_ack"))
         .await
         .expect("could not select namespace");
     db

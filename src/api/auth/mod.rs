@@ -28,13 +28,13 @@ async fn login(
 }
 
 #[post("/register", data = "<payload>")]
-async fn register(payload: Json<CreateUserPayload>, service: &State<UserService>) -> Json<Status> {
+async fn register(payload: Json<CreateUserPayload>, service: &State<UserService>) -> Status {
     match service.create_user(payload.into_inner()).await {
-        Ok(Some(_)) => Json(Status::Accepted),
-        Ok(None) => Json(Status::BadRequest),
+        Ok(Some(_)) => Status::Accepted,
+        Ok(None) => Status::BadRequest,
         Err(e) => {
             debug!("Registration error: {e}");
-            Json(Status::InternalServerError)
+            Status::InternalServerError
         }
     }
 }

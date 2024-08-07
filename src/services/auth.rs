@@ -1,5 +1,5 @@
 use anyhow::{Error, Result};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tracing::debug;
 
 use crate::jwt::Refreshtoken;
@@ -115,10 +115,10 @@ impl AuthService {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct TokenPair {
-    access_token: String,
-    refresh_token: String,
+    pub access_token: String,
+    pub refresh_token: String,
 }
 
 impl TokenPair {
