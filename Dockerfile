@@ -23,7 +23,6 @@ RUN --mount=type=bind,source=src,target=src \
     --mount=type=bind,source=test-utils,target=test-utils \
     --mount=type=cache,target=/app/target/,id=rust-cache-${APP_NAME}-${TARGETPLATFORM} \
     --mount=type=cache,target=/usr/local/cargo/git/db \
-    --mount=type=cache,target=/usr/local/cargo/registry/ \
 xx-cargo build --locked --release --target-dir ./target && \
 cp ./target/$(xx-cargo --print-target-triple)/release/$APP_NAME /bin/server && \
 xx-verify /bin/server
