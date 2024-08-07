@@ -1,12 +1,5 @@
 name: Image
 
-on:
-  workflow_run:
-    workflows:
-      - CI Checks
-    types:
-      - completed
-
 jobs:
   publish-docker-image:
     name: Build & Publish Docker Image
