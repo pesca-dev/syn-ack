@@ -114,5 +114,5 @@ jobs:
 
   image:
     needs: testing
-    uses: pesca-dev/syn-ack/.github/workflows/image.yml@${{ github.ref_name }}
+    uses: pesca-dev/syn-ack/.github/workflows/image.yml@main
     secrets: inherit
