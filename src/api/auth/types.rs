@@ -191,7 +191,9 @@ mod tests {
 
     #[test]
     fn test_authorization_from_bearer_success() {
-        std::env::set_var("ACCESS_JWT_KEY", "some-key");
+        unsafe {
+            std::env::set_var("ACCESS_JWT_KEY", "some-key");
+        }
 
         let jwt_token = jwt::Accesstoken::new("foo");
 
