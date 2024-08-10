@@ -1,8 +1,8 @@
 use std::error::Error;
 
-use rocket::http::{ContentType, Header, Status};
+use rocket::http::{Header, Status};
 use syn_ack::services::TokenPair;
-use test_utils::{client, env};
+use test_utils::{env, TestFramework};
 
 #[tokio::test]
 async fn auth_flow() -> Result<(), Box<dyn Error>> {
@@ -11,144 +11,66 @@ async fn auth_flow() -> Result<(), Box<dyn Error>> {
         .set("DB_NS", "syn_ack_testing")
         .set("DB_DB", "auth_flow");
 
-    let client = client().await?;
+    let mut framework = TestFramework::new().await?;
 
     // create user
+    {
+        let response = framework
+            .post(
+                "/api/v1/auth/register",
+                Some(
+                    r#"{
+                            "username": "m.mustermann",
+                            "email": "mustermann@example.com",
+                            "password": "somePassword"
+                        }"#,
+                ),
+            )
+            .dispatch()
+            .await;
 
-    let response = client
-        .post("/api/v1/auth/register")
-        .header(ContentType::JSON)
-        .body(
-            r#"{
-                "username": "m.mustermann",
-                "email": "mustermann@example.com",
-                "password": "somePassword"
-            }"#,
-        )
-        .dispatch()
-        .await;
-
-    assert_eq!(response.status(), Status::Accepted);
-    assert_eq!(response.into_string().await, None);
+        assert_eq!(response.status(), Status::Accepted);
+    }
 
     // login with credentials
-
-    let response = client
-        .post("/api/v1/auth/login")
-        .header(ContentType::JSON)
-        .body(
-            r#"{
-                "username": "m.mustermann",
-                "password": "somePassword"
-            }"#,
-        )
-        .dispatch()
-        .await;
-
-    // fetch tokens from login
-
-    assert_eq!(response.status(), Status::Accepted);
-    let Some(TokenPair {
-        access_token,
-        refresh_token,
-    }) = response.into_json::<TokenPair>().await
-    else {
-        panic!("login response did not match");
-    };
+    framework.login("m.mustermann", "somePassword").await;
 
     // try to fetch authorized route
+    {
+        let response = framework.get("/api/v1/auth/authorized").dispatch().await;
+        assert_eq!(response.status(), Status::Ok);
+    }
 
-    let response = client
-        .get("/api/v1/auth/authorized")
-        .header(Header::new(
-            "Authorization",
-            format!("Bearer {access_token}"),
-        ))
-        .dispatch()
-        .await;
-
-    assert_eq!(response.status(), Status::Ok);
-    assert_eq!(
-        response.into_string().await,
-        Some("Hey m.mustermann, called 1".into())
-    );
-
-    // refresh current session
-
-    let response = client
-        .post("/api/v1/auth/refresh")
-        .header(Header::new(
-            "Authorization",
-            format!("Bearer {refresh_token}"),
-        ))
-        .dispatch()
-        .await;
-
-    assert_eq!(response.status(), Status::Accepted);
-    let Some(new_tokens) = response.into_json::<TokenPair>().await else {
-        panic!("refresh response did not match");
+    let Some(TokenPair { access_token, .. }) = framework.tokens() else {
+        unreachable!()
     };
 
-    // fetch the authorized route with old access token
+    // refresh current session
+    framework.refresh().await;
 
-    let response = client
-        .get("/api/v1/auth/authorized")
-        .header(Header::new(
+    // fetch the authorized route with old access token
+    {
+        let mut req = framework.get("/api/v1/auth/authorized");
+        req.replace_header(Header::new(
             "Authorization",
             format!("Bearer {access_token}"),
-        ))
-        .dispatch()
-        .await;
-
-    assert_eq!(response.status(), Status::Ok);
-    assert_eq!(
-        response.into_string().await,
-        Some("Hey m.mustermann, called 2".into())
-    );
-
-    let TokenPair { access_token, .. } = new_tokens;
+        ));
+        let response = req.dispatch().await;
+        assert_eq!(response.status(), Status::Ok);
+    }
 
     // fetch the authorized route with new access token
-
-    let response = client
-        .get("/api/v1/auth/authorized")
-        .header(Header::new(
-            "Authorization",
-            format!("Bearer {access_token}"),
-        ))
-        .dispatch()
-        .await;
-
-    assert_eq!(response.status(), Status::Ok);
-    assert_eq!(
-        response.into_string().await,
-        Some("Hey m.mustermann, called 3".into())
-    );
+    {
+        let response = framework.get("/api/v1/auth/authorized").dispatch().await;
+        assert_eq!(response.status(), Status::Ok);
+    }
 
     // logout
-
-    let response = client
-        .get("/api/v1/auth/logout")
-        .header(Header::new(
-            "Authorization",
-            format!("Bearer {access_token}"),
-        ))
-        .dispatch()
-        .await;
-
-    assert_eq!(response.status(), Status::Ok);
+    framework.logout().await;
 
     // try to access while being unauthorized
 
-    let response = client
-        .get("/api/v1/auth/authorized")
-        .header(Header::new(
-            "Authorization",
-            format!("Bearer {access_token}"),
-        ))
-        .dispatch()
-        .await;
-
+    let response = framework.get("/api/v1/auth/authorized").dispatch().await;
     assert_eq!(response.status(), Status::Unauthorized);
 
     Ok(())

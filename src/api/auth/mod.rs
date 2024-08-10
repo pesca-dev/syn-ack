@@ -58,10 +58,8 @@ async fn logout(session: Session, service: &State<AuthService>) {
 }
 
 #[get("/authorized")]
-async fn authorized(user: User, g: &State<MyGuard>) -> String {
-    let mut counter = g.counter.lock().await;
-    *counter += 1;
-    format!("Hey {}, called {counter}", user.username)
+async fn authorized(_user: User) -> Status {
+    Status::Ok
 }
 
 pub fn routes() -> Vec<rocket::Route> {

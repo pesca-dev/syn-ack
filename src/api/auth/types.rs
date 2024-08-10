@@ -1,11 +1,9 @@
 use std::str::FromStr;
-use std::sync::Arc;
 
 use rocket::{
     http::Status,
     request::{FromRequest, Outcome},
     serde::json::Json,
-    tokio::sync::Mutex,
     Request, Responder,
 };
 use serde::{Deserialize, Serialize};
@@ -15,11 +13,6 @@ use crate::{
     repositories::{Session, User},
     services::{AuthService, TokenPair},
 };
-
-#[derive(Clone, Debug, Default)]
-pub struct MyGuard {
-    pub counter: Arc<Mutex<i64>>,
-}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Bearer(pub String);
