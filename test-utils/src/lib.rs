@@ -1,10 +1,16 @@
+mod framework;
+
+pub use self::framework::*;
+
 #[derive(Clone, Copy, Default)]
 pub struct Setup;
 
 impl Setup {
     pub fn set_env(self, vars: Vec<(&str, &str)>) -> Self {
         for (key, value) in vars.iter() {
-            std::env::set_var(key, value);
+            unsafe {
+                std::env::set_var(key, value);
+            }
         }
 
         self
@@ -31,7 +37,9 @@ impl Env {
     }
 
     pub fn set(self, key: impl ToString, value: impl ToString) -> Self {
-        std::env::set_var(key.to_string(), value.to_string());
+        unsafe {
+            std::env::set_var(key.to_string(), value.to_string());
+        }
         self
     }
 }

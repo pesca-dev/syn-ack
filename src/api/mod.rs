@@ -13,5 +13,4 @@ pub async fn mount(instance: Rocket<Build>) -> Rocket<Build> {
     instance
         .mount(BASE, routes![get_version])
         .mount([BASE, "auth"].concat(), auth::routes())
-        .manage(auth::MyGuard::default())
 }
