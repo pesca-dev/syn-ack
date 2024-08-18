@@ -25,13 +25,13 @@ pub fn repository(
     let create_payload_ident = format_ident!("Create{ident}Payload");
 
     let gen = quote! {
-        #[derive(Default, Clone, Debug, Hash, Serialize, Deserialize)]
+        #[derive(Default, Clone, Debug, Hash, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
         pub struct #ident {
             pub id: Option<surrealdb::sql::Thing>,
             #(#field_declarations)*
         }
 
-        #[derive(Debug, Default, Clone, Hash, PartialEq, Serialize, Deserialize)]
+        #[derive(Default, Clone, Debug, Hash, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
         pub struct #create_payload_ident {
             #(#field_declarations)*
         }
