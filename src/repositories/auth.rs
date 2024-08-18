@@ -1,16 +1,17 @@
 use anyhow::Result;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use surreal_derive::Repository;
+use surreal_derive::repository;
 use surrealdb::{engine::remote::ws::Client, sql::Thing, Surreal};
 
-use crate::{define_repository, use_db};
+use crate::use_db;
 
-define_repository!(Session,
+#[repository]
+pub struct Session {
     pub user_id: String,
     pub last_refresh: String,
-    pub created_at: chrono::DateTime<Utc>
-);
+    pub created_at: chrono::DateTime<Utc>,
+}
 
 #[derive(Debug, Clone)]
 pub struct AuthRepository {
