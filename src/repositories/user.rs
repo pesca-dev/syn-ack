@@ -1,15 +1,16 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use surreal_derive::Repository;
+use surreal_derive::repository;
 use surrealdb::{engine::remote::ws::Client, sql::Thing, Surreal};
 
-use crate::{define_repository, use_db};
+use crate::use_db;
 
-define_repository!(User,
+#[repository]
+pub struct User {
     pub username: String,
     pub email: String,
     pub password: String,
-);
+}
 
 #[derive(Debug, Clone)]
 pub struct UserRepository {
