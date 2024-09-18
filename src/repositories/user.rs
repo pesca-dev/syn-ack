@@ -1,7 +1,7 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use surreal_derive::repository;
-use surrealdb::{engine::remote::ws::Client, sql::Thing, Surreal};
+use surrealdb::{engine::remote::ws::Client, RecordId, Surreal};
 
 use crate::use_db;
 
@@ -46,8 +46,8 @@ impl UserRepository {
         Ok(result)
     }
 
-    pub async fn find_by_id(&self, id: impl TryInto<Thing>) -> Result<Option<User>> {
-        let Ok(thing) = TryInto::<Thing>::try_into(id) else {
+    pub async fn find_by_id(&self, id: impl ToString) -> Result<Option<User>> {
+        let Ok(thing) = id.to_string().parse::<RecordId>() else {
             return Err(anyhow::Error::msg("invalid id given"));
         };
 
