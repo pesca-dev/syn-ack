@@ -56,7 +56,7 @@ impl AuthService {
 
     pub async fn fetch_session_by_id(&self, session_id: impl ToString) -> Option<Session> {
         self.session_repository
-            .find_session_by_id(session_id.to_string())
+            .find_session_by_id(session_id)
             .await
             .ok()
             .flatten()
@@ -67,10 +67,8 @@ impl AuthService {
             return None;
         };
 
-        let Ok(Some(Session { user_id, .. })) = self
-            .session_repository
-            .find_session_by_id(session_id.to_string())
-            .await
+        let Ok(Some(Session { user_id, .. })) =
+            self.session_repository.find_session_by_id(session_id).await
         else {
             return None;
         };
