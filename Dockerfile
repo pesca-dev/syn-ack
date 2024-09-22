@@ -1,4 +1,4 @@
-ARG RUST_VERSION=1.80.0
+ARG RUST_VERSION=1.80.1
 ARG APP_NAME=syn-ack
 
 FROM --platform=$BUILDPLATFORM tonistiigi/xx:1.3.0 AS xx
