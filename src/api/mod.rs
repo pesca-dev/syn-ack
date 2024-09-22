@@ -1,4 +1,5 @@
 mod auth;
+mod calendar;
 
 use rocket::{get, routes, Build, Rocket};
 
@@ -13,4 +14,5 @@ pub async fn mount(instance: Rocket<Build>) -> Rocket<Build> {
     instance
         .mount(BASE, routes![get_version])
         .mount([BASE, "auth"].concat(), auth::routes())
+        .mount([BASE, "cal"].concat(), calendar::routes())
 }
