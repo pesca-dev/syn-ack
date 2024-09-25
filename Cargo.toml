@@ -19,7 +19,7 @@ serde = { version = "1.0.210", features = ["derive"] }
 sha2 = "0.10.8"
 uuid = { version = "1.10.0", features = ["v4"] }
 anyhow = "1.0.89"
-surrealdb = { version = "2.0.1", features = ["kv-mem"] }
+surrealdb = { version = "2.0.2", features = ["kv-mem"] }
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
 
