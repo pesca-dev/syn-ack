@@ -7,4 +7,4 @@ edition = "2021"
 chrono = "0.4.38"
 ics_derive = { path = "../ics_derive/" }
 url = "2.5.2"
-uuid = { version = "1.10.0", features = ["v4"] }
+uuid = { version = "1.11.0", features = ["v4"] }

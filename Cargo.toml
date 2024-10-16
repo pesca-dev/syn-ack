@@ -17,7 +17,7 @@ jwt = "0.16.0"
 rocket = { version = "0.5.1", features = ["json"] }
 serde = { version = "1.0.210", features = ["derive"] }
 sha2 = "0.10.8"
-uuid = { version = "1.10.0", features = ["v4"] }
+uuid = { version = "1.11.0", features = ["v4"] }
 anyhow = "1.0.89"
 surrealdb = { version = "2.0.3", features = ["kv-mem"] }
 tracing = "0.1.40"
