@@ -84,8 +84,8 @@ pub fn derive_utils_for_struct(DataStruct { fields, .. }: DataStruct) -> TokenSt
                     }
                 }
             }
-            _ => {
-                todo!("this type is currently not supported")
+            other => {
+                todo!("this type is currently not supported ({other:?})")
             }
         }
     });
